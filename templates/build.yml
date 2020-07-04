@@ -1,0 +1,22 @@
+parameters:
+  buildConfiguration: 'Release'
+#In a template file, you use the parameters section instead of variables to define inputs.
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Build the project - ${{ parameters.buildConfiguration }}'
+#In a template file, you use ${{ }} syntax instead of $() to read a parameter's value. When you read a parameter's value, you include the parameters section in its name. For example, ${{ parameters.buildConfiguration }}.
+  inputs:
+    command: 'build'
+    arguments: '--no-restore --configuration ${{ parameters.buildConfiguration }}'
+    projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+#DotNetCoreCLI@2 task to publish, or package, the application's build results (including its dependencies) into a folder. The zipAfterPublish argument specifies to add the built results to a .zip file.
+  displayName: 'Publish the project - ${{ parameters.buildConfiguration }}'
+  inputs:
+    command: 'publish'
+    projects: '**/*.csproj'
+    publishWebProjects: false
+    arguments: '--no-build --configuration ${{ parameters.buildConfiguration }} --output $(Build.ArtifactStagingDirectory)/${{ parameters.buildConfiguration }}'
+    zipAfterPublish: true
