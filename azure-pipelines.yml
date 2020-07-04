@@ -39,7 +39,7 @@ steps:
 #$(Build.BuildId) is a numeric identifier for the completed build, like 115.
 #$(Build.BuildNumber) is name of the completed build. You can configure the format, but by default the build number includes the current date followed by the build number for that day. An example build number is "20190329.1."
   displayName: 'Write build info'
-  workingDirectory: Tailspain.SpaceGame.Web/wwwroot
+  workingDirectory: Tailspin.SpaceGame.Web/wwwroot
 
 - task: DotNetCoreCLI@2
   displayName: 'Restore project dependencies'
