@@ -50,22 +50,13 @@ steps:
     command: 'restore'
     projects: '**/*.csproj'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build the project - $(buildConfiguration)'
-  inputs:
-    command: 'build'
-    arguments: '--no-restore --configuration $(buildConfiguration)'
-    projects: '**/*.csproj'
+- template: templates/build.yml
+  parameters:
+    buildConfiguration: 'Release'
 
-- task: DotNetCoreCLI@2
-#DotNetCoreCLI@2 task to publish, or package, the application's build results (including its dependencies) into a folder. The zipAfterPublish argument specifies to add the built results to a .zip file.
-  displayName: 'Publish the project - $(buildConfiguration)'
-  inputs:
-    command: 'publish'
-    projects: '**/*.csproj'
-    publishWebProjects: false
-    arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
-    zipAfterPublish: true
+- template: templates/build.yml
+  parameters:
+    buildConfiguration: 'Debug'
 
 - task: PublishBuildArtifacts@1
 # PublishBuildArtifacts@1 task to publish the .zip file to Azure Pipelines. The condition argument specifies to run the task only when the previous task succeeds. succeeded() is the default condition, so you don't need to specify it.
