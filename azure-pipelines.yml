@@ -7,28 +7,49 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-18.04'
+  demands:  #Specifies npm is installed on the build system
+  - npm
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
+- task: UseDotNet@2
+#Although the build agent comes with a number of .NET Core SDK versions, this task lets us easily specify the version we need to use on the build agent.
+  displayName: 'Use .NET Core SDK 3.1.300'
   inputs:
-    restoreSolution: '$(solution)'
+    packageType: sdk
+    version: 3.1.300
 
-- task: VSBuild@1
+- task: Npm@1
+  displayName: 'Run npm install'
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    verbose: false
 
-- task: VSTest@2
+- script: './node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot' --output Tailspin.SpaceGame.Web/wwwroot'
+# The pipeline uses the script task because it's a common shortcut for CmdLine@2.
+  displayName: 'Compile Sass assets'
+
+- task: gulp@1
+  displayName: 'Run gulp tasks'
+
+- script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > build.info.txt'
+#$(Build.DefinitionName) specifies the name of the build pipeline. For example, "SpaceGame-Web-CI."
+#$(Build.BuildId) is a numeric identifier for the completed build, like 115.
+#$(Build.BuildNumber) is name of the completed build. You can configure the format, but by default the build number includes the current date followed by the build number for that day. An example build number is "20190329.1."
+  displayName: 'Write build info'
+  workingDirectory: Tailspain.SpaceGame.Web/wwwroot
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore project dependencies'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'restore'
+    projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build the project - Release'
+  inputs:
+    command: 'build'
+    arguments: '--no-restore --configuration Release'
+    projects: '**/*.csproj'
